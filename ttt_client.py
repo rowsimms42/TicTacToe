@@ -12,7 +12,7 @@ total_length = 0
 client_socket = socket(AF_INET, SOCK_STREAM)
 # establish connection between server and client
 client_socket.connect((server_name, port_number))
-print("Welcome to Tic Tac Toe. To exit, enter /q.")
+print("Welcome to Tic Tac Toe. To exit, enter control c.")
 
 the_board = {'7': ' ', '8': ' ', '9': ' ',
              '4': ' ', '5': ' ', '6': ' ',
@@ -43,11 +43,12 @@ def play():
         print(rec_msg.decode())
 
         response = rec_msg[0]
+
         if response == "#":
             while True:
                 req_msg = raw_input("> ")
-                if req_msg not in {'1', '2', '3', '4', '5', '6', '7', '8', '9'}:
-                    print("Number must be between 1 and 9.")
+                if req_msg not in {'1', '2', '3', '4', '5', '6', '7', '8', '9'} or the_board[req_msg] != ' ':
+                    print("Number must be between 1 and 9 and not already taken.")
                 else:
                     req_msg = req_msg
                     p_num = str(rec_msg[3])
@@ -84,5 +85,3 @@ def play():
 
 while True:
     play()
-
-client_socket.close()
