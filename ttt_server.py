@@ -1,4 +1,6 @@
 # source: class book: Computer Networking by Kurose and Ross
+# https://stackoverflow.com/questions/25005292/multiplayer-snake-game-pythonv
+
 import sys
 import time
 from socket import *
@@ -31,23 +33,24 @@ def handler(connection_socket, add):
     b = 0
     time.sleep(1)
     if game_started:
-        players[0].send("Player 1, you are o.")
-        players[1].send("Player 2, you are x.")
-        intro = True
+        players[0].send("@ Player 1, you are o.")
+        players[1].send("@ Player 2, you are x.")
         time.sleep(1)
-        p1 = True
-        while p1:
-            players[0].send("# Enter 1-9")
+        players[0].send("* board key *")
+        players[1].send("* board key *")
+        time.sleep(1)
+        game_loop = True
+        while game_loop:
+            players[0].send("# P1: Enter 1-9")
             rec_msg_p1 = players[0].recv(1024).decode()  # receive message
             print(rec_msg_p1)
-            players[1].send(str(rec_msg_p1) + ": Player 1's move")
+            players[1].send("|" + str(rec_msg_p1) + "| : Player 1's move")
             time.sleep(1)
-            players[1].send("# Enter 1-9")
+            players[1].send("# P2: Enter 1-9")
             rec_msg_p2 = players[1].recv(1024).decode()  # receive message
             print(rec_msg_p2)
-            players[0].send(str(rec_msg_p2) + ": Player 2's move")
+            players[0].send("|" + str(rec_msg_p2) + "| : Player 2's move")
             time.sleep(1)
-
 
 
 count = 1
