@@ -4,7 +4,7 @@
 from socket import *
 
 server_name = gethostname()
-port_number = 4246
+port_number = 4243
 total_length = 0
 
 # create client socket
@@ -12,7 +12,7 @@ total_length = 0
 client_socket = socket(AF_INET, SOCK_STREAM)
 # establish connection between server and client
 client_socket.connect((server_name, port_number))
-print("Welcome to Tic Tac Toe. To exit, enter control c.")
+print("Welcome to Tic Tac Toe. To exit, enter /q.")
 
 the_board = {'7': ' ', '8': ' ', '9': ' ',
              '4': ' ', '5': ' ', '6': ' ',
@@ -37,8 +37,10 @@ def empty_board():
 
 def play():
     response = 0
+    ex = False
     while True:
         # output message
+
         rec_msg = client_socket.recv(4026)
         print(rec_msg.decode())
 
@@ -47,7 +49,10 @@ def play():
         if response == "#":
             while True:
                 req_msg = raw_input("> ")
-                if req_msg not in {'1', '2', '3', '4', '5', '6', '7', '8', '9'} or the_board[req_msg] != ' ':
+                if req_msg == "/q":
+                    ex = True
+                    break
+                elif req_msg not in {'1', '2', '3', '4', '5', '6', '7', '8', '9'} or the_board[req_msg] != ' ':
                     print("Number must be between 1 and 9 and not already taken.")
                 else:
                     req_msg = req_msg
@@ -58,8 +63,13 @@ def play():
                         the_board[req_msg] = 'x'
                     print_board(the_board)
                     print("")
-                    client_socket.send(req_msg.encode())
                     break
+            if ex:
+                client_socket.send(req_msg.encode())
+                print("Exiting game...")
+                break
+            else:
+                client_socket.send(req_msg.encode())
         elif response == "|":
             num = str(rec_msg[1])
             if p_n == "o":
@@ -79,9 +89,14 @@ def play():
                 p_n = "o"
             else:
                 p_n = "x"
+        elif response == "~":
+            break
         else:
             continue
 
 
 while True:
     play()
+    break
+client_socket.close()
+

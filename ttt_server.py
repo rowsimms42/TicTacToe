@@ -1,26 +1,25 @@
 # source: class book: Computer Networking by Kurose and Ross
 # https://stackoverflow.com/questions/25005292/multiplayer-snake-game-pythonv
-
+import os
 import sys
+import thread
 import time
 from socket import *
 from thread import start_new_thread
-import Queue
-
-server_port = 4246  # establish port number
-server_socket = socket(AF_INET, SOCK_STREAM)  # create streaming socket
+import multiprocessing
+r = True
 players = []
 game_started = False
+
 
 server_board = {'7': ' ', '8': ' ', '9': ' ',
                 '4': ' ', '5': ' ', '6': ' ',
                 '1': ' ', '2': ' ', '3': ' '}
 
-try:
-    server_socket.bind((gethostname(), server_port))  # bind the socket to host and port
-except socket.error as e:
-    str(e)
-server_socket.listen(2)
+server_port = 4243  # establish port number
+server_socket = socket(AF_INET, SOCK_STREAM)  # create streaming socket
+server_socket.bind(('', server_port))  # bind the socket to host and port
+server_socket.listen(1)
 print("The server on port %d is listening." % server_port)
 
 
@@ -47,6 +46,7 @@ def check_if_won():
 
 def handler(connection_socket, add):
     game_over = False
+    ex = False
     time.sleep(1)
     i = 0
     j = 0
@@ -62,6 +62,11 @@ def handler(connection_socket, add):
             players[0].send("# P1: Enter 1-9")
             players[1].send("Waiting for your turn...")
             rec_msg_p1 = players[0].recv(1024).decode()  # receive message
+            if rec_msg_p1 == "/q":
+                players[1].send("~~ A player has exited the game. Goodbye. ~~")
+                # players[0].send("~~ A player has exited the game. Goodbye. ~~")
+                ex = True
+                break
             print(rec_msg_p1)
             p = str(rec_msg_p1)
             server_board[p] = 'o'
@@ -69,13 +74,20 @@ def handler(connection_socket, add):
             time.sleep(1)
             game_over = check_if_won()
             if game_over:
-                players[0].send("Game over. Player 1 won.")
-                players[1].send("Game over. Player 1 won.")
+                players[0].send("~~ Game over. Player 1 won. ~~")
+                players[1].send("~~ Game over. Player 1 won. ~~")
                 print("Game over. Player 1 won.")
+                connection_socket.close()
+                ex = True
                 break
             players[1].send("# P2: Enter 1-9")
             players[0].send("Waiting for your turn...")
             rec_msg_p2 = players[1].recv(1024).decode()  # receive message
+            if rec_msg_p2 == "/q":
+                players[0].send("~~ A player has exited the game. Goodbye. ~~")
+                # players[0].send("~~ A player has exited the game. Goodbye. ~~")
+                ex = True
+                break
             q = str(rec_msg_p2)
             server_board[q] = 'x'
             print(rec_msg_p2)
@@ -83,14 +95,27 @@ def handler(connection_socket, add):
             time.sleep(1)
             game_over = check_if_won()
             if game_over:
-                players[0].send("Game over. Player 2 won.")
-                players[1].send("Game over. Player 2 won.")
-                print("Game over. Player 2 won")
+                players[0].send("~~ Game over. Player 2 won. ~~")
+                players[1].send("~~ Game over. Player 2 won. ~~")
+                print("Game over. Player 2 won.")
+                connection_socket.close()
+                ex = True
                 break
+        if ex:
+            print("Players have left game. Enter control-c to close server.")
+            connection_socket.close()
+            stop()
+
+
+def stop():
+    conn.close()
+    server_socket.close()
+    sys.exit()
 
 
 count = 1
 # server waits
+
 while True:  # connection is established
     conn, address = server_socket.accept()  # accept outside connection
     print("Player " + str(count) + " has joined.")
@@ -102,5 +127,4 @@ while True:  # connection is established
         players[0].send("Player 2 has joined. ")
         players[1].send("Hello, player 2. ")
         game_started = True
-
     start_new_thread(handler, (conn, address))
