@@ -39,7 +39,7 @@ def check_if_won():
 
 
 def draw():
-    player_socket.send("Draw.")
+    player_socket.send("~~ Draw ~~")
 
 
 def play():
